@@ -32,7 +32,14 @@ function round2(n) {
 }
 
 function formatMoney(n, currency = "USD") {
-  if (!Number.isFinite(n)) return new Intl.NumberFormat(undefined, { style: "currency", currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(0);
+  if (!Number.isFinite(n)) {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(0);
+  }
   return n.toLocaleString(undefined, {
     style: "currency",
     currency,
@@ -46,17 +53,9 @@ function formatPct(rate) {
   return (rate * 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
 }
 
-function rangeLabel(min, max, currency) {
-  if (max == null) return `From ${formatMoney(min, currency)}+`;
-  return `From ${formatMoney(min, currency)} to ${formatMoney(max, currency)}`;
-}
-
 function midToMaxLabel(min, max, currency) {
   if (!Number.isFinite(min)) min = 0;
-  if (max == null || !Number.isFinite(max)) {
-    // open-ended tier: keep the minimum as "+", there is no safe midpoint
-    return `From ${formatMoney(min, currency)}+`;
-  }
+  if (max == null || !Number.isFinite(max)) return `From ${formatMoney(min, currency)}+`;
   const mid = round2((min + max) / 2);
   return `From ${formatMoney(mid, currency)} to ${formatMoney(max, currency)}`;
 }
@@ -64,7 +63,6 @@ function midToMaxLabel(min, max, currency) {
 function isValidOptionalContact(s) {
   const v = String(s || "").trim();
   if (!v) return true; // optional
-  // minimal sanity: avoid 1-char junk
   return v.length >= 3;
 }
 
@@ -78,7 +76,12 @@ const Card = ({ children, accent = false }) => (
 );
 
 const StepWrap = ({ title, children, stepKey }) => (
-  <motion.div key={stepKey} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: "easeOut" }}>
+  <motion.div
+    key={stepKey}
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.25, ease: "easeOut" }}
+  >
     <h3 className="text-base sm:text-lg font-semibold mb-3" style={{ color: ORANGE }}>
       {title}
     </h3>
@@ -117,8 +120,6 @@ async function sendToGoogleSheets(payload) {
 
   const body = JSON.stringify({ ...payload, token });
 
-  // Using no-cors avoids browser CORS blocks for Apps Script Web Apps.
-  // You won’t be able to read response, but the row will be appended.
   await fetch(url, {
     method: "POST",
     mode: "no-cors",
@@ -210,50 +211,49 @@ export default function FinassetsAgentCalculator() {
       return;
     }
 
-    // Always show result, contact is optional
     setShowResult(true);
     setSaving(true);
 
     try {
-      // Send to Google Sheets only if contact is provided
-      if (c) {
-        const payload = {
-          timestamp_iso: new Date().toISOString(),
-          contact: c,
+      // IMPORTANT: send ALWAYS (even if contact empty) so you log all selections.
+      // Also keep field names that Apps Script expects.
+      const payload = {
+        timestamp_iso: new Date().toISOString(),
 
-          company_size_id: selectedSize.id,
-          company_size_label: selectedSize.label,
+        // Apps Script expects `email`, so we map contact -> email to keep backend unchanged.
+        email: c,
 
-          business_type_id: selectedBusiness.id,
-          business_type_label: selectedBusiness.label,
+        company_size_id: selectedSize.id,
+        company_size_label: selectedSize.label,
 
-          merchants_label: selectedCount.label,
-          merchants_min_count: selectedCount.value,
+        business_type_id: selectedBusiness.id,
+        business_type_label: selectedBusiness.label,
 
-          fee_rate: calc.feeRate,
-          agent_share: calc.share,
+        merchants_label: selectedCount.label,
+        merchants_min_count: selectedCount.value,
 
-          currency: CURRENCY,
+        fee_rate: calc.feeRate,
+        agent_share: calc.share,
 
-          turnover_min_usd: calc.turnover.min,
-          turnover_max_usd: calc.turnover.max,
+        currency: CURRENCY,
+        fx_rate: 1,
 
-          commission_per_merchant_min_usd: calc.commissionPerMerchant.min,
-          commission_per_merchant_max_usd: calc.commissionPerMerchant.max,
+        turnover_min: calc.turnover.min,
+        turnover_max: calc.turnover.max,
 
-          commission_total_min_usd: calc.commissionTotal.min,
-          commission_total_max_usd: calc.commissionTotal.max,
+        commission_per_merchant_min: calc.commissionPerMerchant.min,
+        commission_per_merchant_max: calc.commissionPerMerchant.max,
 
-          user_agent: navigator.userAgent,
-          page_url: window.location.href,
-        };
+        commission_total_min: calc.commissionTotal.min,
+        commission_total_max: calc.commissionTotal.max,
 
-        await sendToGoogleSheets(payload);
-      }
+        user_agent: navigator.userAgent,
+        page_url: window.location.href,
+      };
 
+      await sendToGoogleSheets(payload);
       setSaveMsg("Successfully calculated. Showing results below.");
     } catch (e) {
-      // Even if saving fails, we still show the result
       setSaveMsg(String(e?.message || e));
     } finally {
       setSaving(false);
@@ -353,12 +353,7 @@ export default function FinassetsAgentCalculator() {
 
         <AnimatePresence>
           {step2Ready ? (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.25, ease: "easeOut" }}>
               <Card>
                 <StepWrap title="Step 2 — Business type" stepKey="step2">
                   <p className="text-gray-700 mb-4">What type of business is it?</p>
@@ -388,12 +383,7 @@ export default function FinassetsAgentCalculator() {
 
         <AnimatePresence>
           {step3Ready ? (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.25, ease: "easeOut" }}>
               <Card>
                 <StepWrap title="Step 3 — Number of referrals" stepKey="step3">
                   <p className="text-gray-700 mb-4">How many businesses are you ready to recommend?</p>
@@ -431,15 +421,10 @@ export default function FinassetsAgentCalculator() {
 
         <AnimatePresence>
           {step4Ready ? (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.25, ease: "easeOut" }}>
               <Card>
                 <StepWrap title="Step 4 — Your contact (optional)" stepKey="step4">
-                  <p className="text-gray-700 mb-4">Leave your contact so we can reach you if needed. You can also skip this step.</p>
+                  <p className="text-gray-700 mb-4">Leave your contact so we can reach you.</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
                     <div className="flex flex-col gap-1">
@@ -455,7 +440,7 @@ export default function FinassetsAgentCalculator() {
                         }}
                         placeholder="Optional"
                       />
-                      <div className="text-xs text-gray-500 mt-1">If you leave it empty, we’ll still show the result.</div>
+                     
                     </div>
 
                     <button
@@ -465,15 +450,12 @@ export default function FinassetsAgentCalculator() {
                       className="rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ backgroundColor: ORANGE }}
                     >
-                      {saving ? "Calculating..." : "Show result"}
+                      {saving ? "Calculating…" : "Calculate profit"}
                     </button>
                   </div>
 
                   {saveMsg ? (
-                    <div
-                      className="mt-3 text-sm"
-                      style={{ color: saveMsg.toLowerCase().includes("successfully calculated") ? "rgb(22 163 74)" : "rgb(220 38 38)" }}
-                    >
+                    <div className="mt-3 text-sm" style={{ color: saveMsg.toLowerCase().includes("saved") ? "rgb(22 163 74)" : "rgb(220 38 38)" }}>
                       {saveMsg}
                     </div>
                   ) : null}
@@ -484,13 +466,8 @@ export default function FinassetsAgentCalculator() {
         </AnimatePresence>
 
         <AnimatePresence>
-          {showResult && calc && selectedSize && selectedBusiness && selectedCount ? (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 12 }}
-              transition={{ duration: 0.28, ease: "easeOut" }}
-            >
+          {showResult && calc ? (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} transition={{ duration: 0.28, ease: "easeOut" }}>
               <Card accent>
                 <div className="flex flex-col gap-4">
                   <div>
