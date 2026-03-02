@@ -132,8 +132,11 @@ export default function AgentQuickCalculator() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="text-xs text-gray-600">
+  <span className="font-bold text-orange-600">20% lifetime</span> commission per active client. Earnings shown are monthly and scale with client volume.
+</div>
               <Stat
-                label="Your maximum profit 🎉"
+                label="Your maximum monthly profit 🎉"
                 value={canShow ? formatMoney(maxProfit, CURRENCY) : "-"}
               />
               <Stat
