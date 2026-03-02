@@ -124,29 +124,30 @@ export default function AgentQuickCalculator() {
         </div>
       </Card>
 
-      <div className="mt-6">
-        <Card accent>
-          <div className="flex flex-col gap-4">
-            <div className="text-sm text-gray-700">
-              Applied fee rate: <span className="font-semibold">{(feeRate * 100).toFixed(2)}%</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="text-xs text-gray-600">
-  <span className="font-bold text-orange-600">20% lifetime</span> commission per active client. Earnings shown are monthly and scale with client volume.
-</div>
-              <Stat
-                label="Your maximum monthly profit 🎉"
-                value={canShow ? formatMoney(maxProfit, CURRENCY) : "-"}
-              />
-              <Stat
-                label="Referrals used"
-                value={String(referralsNum)}
-              />
-            </div>
-          </div>
-        </Card>
+     <div className="mt-6">
+  <Card accent>
+    <div className="flex flex-col gap-4">
+      <div className="text-sm text-gray-700">
+        Applied fee rate:{" "}
+        <span className="font-semibold">{(feeRate * 100).toFixed(2)}%</span>
       </div>
+
+      <div className="text-xs text-gray-600">
+        <span className="font-bold text-orange-600">20% lifetime</span>{" "}
+        commission per active client. Earnings shown are monthly and scale with
+        client volume.
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Stat
+          label="Your maximum monthly profit 🎉"
+          value={canShow ? formatMoney(maxProfit, CURRENCY) : "-"}
+        />
+        <Stat label="Referrals used" value={String(referralsNum)} />
+      </div>
+    </div>
+  </Card>
+</div>
     </div>
   );
 }
