@@ -104,7 +104,7 @@ export default function AgentQuickCalculator() {
       <Card>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field
-            label="Total monthly transaction volume"
+            label="Merchant monthly transaction volume (your referral)"
             value={turnover}
             onChange={setTurnover}
             hint="USD"
@@ -119,9 +119,33 @@ export default function AgentQuickCalculator() {
           />
         </div>
 
-        <div className="mt-4 text-xs text-gray-500">
-          Fee tier is applied automatically from your monthly volume. Your revenue share is 20% of Finassets fee.
-        </div>
+        <div className="mt-4 text-xs text-gray-500 space-y-2">
+  <div>
+    Fee tier is applied automatically based on the referral merchant’s monthly volume.
+    Your revenue share is <span className="font-semibold">20% lifetime</span> of Finassets fee.
+    {" "}
+    <a
+      href="https://finassets.io/fees"
+      target="_blank"
+      rel="noreferrer"
+      className="underline underline-offset-2"
+    >
+      View fee tiers
+    </a>
+  </div>
+
+  <div>
+    Questions? Message Katerina:{" "}
+    <a
+      href="https://t.me/vostrilovaek"
+      target="_blank"
+      rel="noreferrer"
+      className="underline underline-offset-2"
+    >
+      @vostrilovaek
+    </a>
+  </div>
+</div>
       </Card>
 
      <div className="mt-6">
