@@ -125,7 +125,7 @@ export default function AgentQuickCalculator() {
     Your revenue share is <span className="font-semibold">20% lifetime</span> of Finassets fee.
     {" "}
     <a
-      href="https://finassets.io/fees"
+      href="https://www.finassets.io/#:~:text=Our%20tiered%20fee%20structure"
       target="_blank"
       rel="noreferrer"
       className="underline underline-offset-2"
